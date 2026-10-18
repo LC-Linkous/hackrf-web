@@ -1,0 +1,41 @@
+name: Bridge problem
+description: The bridge won't start, won't connect, a session fails, a recording is wrong, or the fake device and the real board disagree.
+labels: [bridge]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Connection refused, session.start error, frames stop, recording truncated, transmit refused unexpectedly, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: hackrf-web --doctor output
+      description: Paste the preflight report. It names the tools found, the board and firmware, and any problems.
+      render: json
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      placeholder: "hackrf-web 0.1.0 · hackrfpy 1.1.0 · hackrf-tools 2024.02.1 · Windows 11 · Chrome 130"
+    validations:
+      required: true
+  - type: dropdown
+    id: route
+    attributes:
+      label: How was the page served
+      options:
+        - GitHub Pages (https://lc-linkous.github.io/hackrf-web/)
+        - The bridge itself (http://127.0.0.1:8765/)
+        - Local http.server
+    validations:
+      required: true
+  - type: textarea
+    id: diag
+    attributes:
+      label: Diagnostics report
+      description: Diagnostics → Download report on the page; drag the `hackrf-diag-….json` file here. Add the bridge's terminal output too.

@@ -1,0 +1,61 @@
+name: Bug report
+description: Something on the page isn't behaving as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For problems with the **sweep data itself** (fails, looks wrong, disagrees
+        with the device) use the *Scan problem* template — it asks for the
+        diagnostic file.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where is the problem?
+      options:
+        - Connecting / port chooser
+        - Plot or a specific view (say which)
+        - Markers
+        - Export (CSV / Touchstone / PNG / screenshot)
+        - Demo mode
+        - Docs
+        - Deploy (GitHub Actions)
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: Device connected?
+      options:
+        - "Yes — HackRF Ultra"
+        - "Yes — HackRF"
+        - "Yes — other HackRF"
+        - "No — demo mode"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: "Chrome 130 on macOS 15"
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console errors
+      description: F12 → Console; paste anything red.
+      render: text

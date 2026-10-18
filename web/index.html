@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<!--
+  hackrf-web — browser front end for the HackRF One, through a local bridge
+  SPDX-License-Identifier: GPL-2.0-only
+  Copyright (C) 2026 Lauren Linkous
+  Source and license: https://github.com/LC-Linkous/hackrf-web
+  Markup only. Styles in css/, behaviour in js/ (ES modules — serve over http, not file://).
+-->
+<html lang="en" data-theme="dark" data-traces="instrument">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hackrf-web</title>
+<meta name="description" content="A quick bench page for the HackRF One: live spectrum and waterfall from hackrf_sweep or IQ, IQ snapshots, SigMF recording, and gated transmit — through a small local bridge built on hackrfpy.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/panes.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>hackrf-web</h1>
+  <button class="btn primary" id="connectBtn">Connect to bridge</button>
+  <button class="btn" id="demoBtn" aria-pressed="false">Try without hardware</button>
+  <span class="status" id="status"><span class="dot"></span><span id="statusText">Not connected</span></span>
+  <span class="badge" id="sessBadge" hidden>idle</span>
+  <span class="badge rec" id="recBadge" hidden>● REC</span>
+  <span class="badge onair" id="txBadge" hidden>● ON AIR</span>
+  <span class="spacer"></span>
+  <nav>
+    <a href="https://github.com/LC-Linkous/hackrf-web">Source</a>
+    <a href="https://lc-linkous.github.io/">Portfolio</a>
+  </nav>
+</header>
+
+<div class="app">
+  <!-- ================================================================ sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Controls">
+
+    <section data-section="bridge" id="bridgeSection">
+      <h2><button type="button" aria-expanded="true">Bridge</button></h2>
+      <div class="body">
+        <p class="hint" style="margin:0 0 8px">The HackRF is driven by a small local program. Install it once, run it, and it opens this page with its token filled in:</p>
+        <pre class="preflight" style="margin:0 0 8px">pip install hackrf-web
+hackrf-web</pre>
+        <div class="two-col">
+          <div class="field"><label for="bridgeAddr">Address</label><input type="text" id="bridgeAddr" value="127.0.0.1:8765" placeholder="127.0.0.1:8765"></div>
+          <div class="field"><label for="bridgeToken">Token</label><input type="text" id="bridgeToken" placeholder="printed by hackrf-web" autocomplete="off"></div>
+        </div>
+        <p class="hint" id="bridgeHint">The token is read from the URL when the bridge opens the page; paste it here otherwise. It is never stored.</p>
+        <span class="label group">Preflight</span>
+        <div class="tools">
+          <button class="btn small" id="preflightBtn" disabled title="hackrfpy's preflight(): tools, board, disk, problems">Run preflight</button>
+          <button class="btn small" id="detectBtn" disabled>Detect board</button>
+        </div>
+        <div class="preflight" id="preflightOut" style="margin-top:8px" hidden></div>
+      </div>
+    </section>
+
+    <section data-section="sweep">
+      <h2><button type="button" aria-expanded="false">Sweep mode</button></h2>
+      <div class="body">
+        <p class="hint" style="margin:0 0 8px"><code>hackrf_sweep</code>: any span from 1 MHz to 6 GHz, whole-MHz edges, levels relative to the gains.</p>
+        <div class="field"><label for="presetSel">Band</label><select id="presetSel" style="width:100%"></select></div>
+        <div class="two-col">
+          <div class="field"><label for="fMin">Start</label><div class="row"><input type="number" id="fMin" value="88" min="1" step="any"><span class="suffix">MHz</span></div></div>
+          <div class="field"><label for="fMax">Stop</label><div class="row"><input type="number" id="fMax" value="108" min="1" step="any"><span class="suffix">MHz</span></div></div>
+        </div>
+        <div class="field"><label for="binWidth">Bin width</label>
+          <select id="binWidth" style="width:100%"><option value="">tool default</option><option value="20000">20 kHz</option><option value="50000">50 kHz</option><option value="100000" selected>100 kHz</option><option value="250000">250 kHz</option><option value="500000">500 kHz</option><option value="1000000">1 MHz</option></select></div>
+        <div class="stack" style="margin-top:12px">
+          <button class="btn primary block" id="sweepBtn" disabled aria-pressed="false">Start sweep</button>
+        </div>
+        <dl class="kv">
+          <dt>Frames</dt><dd id="sweepStat">—</dd>
+          <dt>Swept</dt><dd id="sweepRange">—</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section data-section="iq">
+      <h2><button type="button" aria-expanded="false">IQ mode</button></h2>
+      <div class="body">
+        <p class="hint" style="margin:0 0 8px"><code>hackrf_transfer</code> at one centre frequency. The bridge does the FFT; snapshots feed the IQ views; recording writes SigMF.</p>
+        <div class="two-col">
+          <div class="field"><label for="center">Centre</label><div class="row"><input type="number" id="center" value="98.1" min="1" step="any"><span class="suffix">MHz</span></div></div>
+          <div class="field"><label for="sampleRate">Sample rate</label><select id="sampleRate" style="width:100%"></select></div>
+        </div>
+        <div class="two-col">
+          <div class="field"><label for="fftSize">FFT size</label><select id="fftSize" style="width:100%"></select></div>
+          <div class="field"><label for="avgN">Average</label><select id="avgN" style="width:100%"><option value="1">1 (none)</option><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option><option value="16">16</option></select></div>
+        </div>
+        <p class="hint" id="rbwHint"></p>
+        <div class="stack" style="margin-top:12px">
+          <button class="btn primary block" id="iqBtn" disabled aria-pressed="false">Start IQ</button>
+        </div>
+        <div class="tools" style="margin-top:10px">
+          <button class="btn small" id="snapBtn" disabled title="iq.snapshot — the latest block, for the IQ time and constellation windows">Snapshot</button>
+        </div>
+        <dl class="kv">
+          <dt>Frames</dt><dd id="iqStat">—</dd>
+          <dt>Snapshot</dt><dd id="snapStat">—</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section data-section="gains" id="gainsSection">
+      <h2><button type="button" aria-expanded="false">Gains</button></h2>
+      <div class="body">
+        <p class="hint" style="margin:0 0 8px">Applied at the next start (the tools can't change gain mid-stream). Snapped to the device's steps; the bridge reports what was actually used.</p>
+        <div class="field"><label for="lna">LNA (IF) <span class="suffix"><span id="lnaOut">16</span> dB</span></label><input type="range" id="lna" min="0" max="40" step="8" value="16" style="width:100%"></div>
+        <div class="field"><label for="vga">VGA (baseband) <span class="suffix"><span id="vgaOut">20</span> dB</span></label><input type="range" id="vga" min="0" max="62" step="2" value="20" style="width:100%"></div>
+        <div class="stack"><label class="row check"><input type="checkbox" id="amp"> <span>RF amplifier (+14 dB) — off unless you know what's on the antenna port</span></label></div>
+        <p class="hint" id="gainsUsed"></p>
+      </div>
+    </section>
+
+    <section data-section="recording">
+      <h2><button type="button" aria-expanded="false">Recording</button></h2>
+      <div class="body">
+        <span class="label">IQ → SigMF (on the bridge)</span>
+        <p class="hint" style="margin:0 0 8px">Raw int8 I/Q, written by the bridge next to its recordings folder, with a <code>.sigmf-meta</code> sidecar. A time cap is required and the disk is checked first.</p>
+        <div class="field"><label for="recMax">Time cap</label><div class="row"><input type="number" id="recMax" value="10" min="1" max="3600" step="1"><span class="suffix">s</span><button class="btn small primary" id="recIqBtn" disabled>Start</button></div>
+          <p class="hint" id="recEstimate"></p></div>
+        <dl class="kv">
+          <dt>File</dt><dd id="recPath">—</dd>
+          <dt>Written</dt><dd id="recBytes">—</dd>
+        </dl>
+        <span class="label group">Sweep frames (on this page)</span>
+        <div class="stack"><button class="btn block" id="recBtn" aria-pressed="false">Start recording frames</button></div>
+        <dl class="kv"><dt>Frames</dt><dd id="recSweeps">0</dd><dt>Size</dt><dd id="recSize">0 kB</dd></dl>
+        <div class="tools">
+          <button class="btn small" id="recWfBtn" disabled title="One row per frame, one column per bin">Waterfall CSV</button>
+          <button class="btn small" id="recSweepsBtn" disabled>Frame log CSV</button>
+          <button class="btn small" id="recJsonBtn" disabled>JSON</button>
+          <button class="btn small" id="recClearBtn" disabled>Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <section data-section="export">
+      <h2><button type="button" aria-expanded="false">Export</button></h2>
+      <div class="body">
+        <div class="tools">
+          <button class="btn small" id="csvBtn" disabled>Frame CSV</button>
+          <button class="btn small" id="pngBtn" disabled>Window PNG</button>
+          <button class="btn small" id="iqCsvBtn" disabled title="The current snapshot as I,Q rows">Snapshot CSV</button>
+        </div>
+        <p class="hint">Frame CSV is <code>Frequency_Hz,Level_dBFS</code>. The snapshot CSV is int8 I and Q per row with the centre and rate in a comment line.</p>
+      </div>
+    </section>
+
+    <section data-section="transmit" id="txSection">
+      <h2><button type="button" aria-expanded="false">Transmit</button></h2>
+      <div class="body">
+        <div class="tx-warning" id="txLocked">Locked. The bridge was started without <code>--allow-tx</code>. Transmitting into the wrong load, band or power level can damage equipment or break the law; unlock it on purpose, on the bridge, when the antenna port is where you want it.</div>
+        <p class="hint" style="margin:0 0 8px">Test tone (<code>hackrf_transfer -c</code>). From idle only; receive is stopped first. The bridge returns to RX mode afterwards whatever happens.</p>
+        <div class="two-col">
+          <div class="field"><label for="txFreq">Frequency</label><div class="row"><input type="number" id="txFreq" value="433.92" min="1" step="any"><span class="suffix">MHz</span></div></div>
+          <div class="field"><label for="txDur">Duration</label><div class="row"><input type="number" id="txDur" value="5" min="1" max="30" step="1"><span class="suffix">s</span></div></div>
+        </div>
+        <div class="field"><label for="txvga">TX VGA <span class="suffix"><span id="txvgaOut">0</span> dB</span></label><input type="range" id="txvga" min="0" max="47" step="1" value="0" style="width:100%"></div>
+        <div class="field"><label for="txAmpl">DAC amplitude <span class="suffix"><span id="txAmplOut">64</span> / 127</span></label><input type="range" id="txAmpl" min="1" max="127" step="1" value="64" style="width:100%"></div>
+        <div class="stack"><label class="row check"><input type="checkbox" id="txAmp"> <span>RF amplifier on transmit (+14 dB)</span></label></div>
+        <div class="stack" style="margin-top:12px"><button class="btn block" id="txBtn" disabled>Transmit tone…</button></div>
+        <p class="hint" id="txStatus"></p>
+      </div>
+    </section>
+
+    <section data-section="diagnostics">
+      <h2><button type="button" aria-expanded="false">Diagnostics</button></h2>
+      <div class="body">
+        <p class="hint" style="margin:0 0 8px">Bundles the bridge's hello, the preflight report, the session status and the last frame headers into one JSON to attach to an issue. Changes nothing.</p>
+        <div class="tools">
+          <button class="btn small primary" id="diagBtn" disabled>Download report</button>
+        </div>
+      </div>
+    </section>
+
+    <section data-section="settings">
+      <h2><button type="button" aria-expanded="false">Settings</button></h2>
+      <div class="body">
+        <form id="settingsForm">
+          <div class="field"><span class="label">Theme</span>
+            <div class="radios row" style="gap:16px"><label><input type="radio" name="theme" value="dark"> <span>Dark</span></label><label><input type="radio" name="theme" value="light"> <span>Light</span></label></div></div>
+          <div class="field"><span class="label">Trace colours</span>
+            <div class="radios stack"><label><input type="radio" name="traces" value="instrument"> <span>Instrument (yellow, magenta max, cyan min / Q)</span></label><label><input type="radio" name="traces" value="blueamber"> <span>Blue / amber / green</span></label></div></div>
+          <div class="two-col">
+            <div class="field"><label for="refDbm">Reference level</label>
+              <select id="refDbm" name="refDbm" style="width:100%"><option value="10">+10 dBFS</option><option value="0">0 dBFS</option><option value="-10">−10 dBFS</option><option value="-20">−20 dBFS</option><option value="-30">−30 dBFS</option></select></div>
+            <div class="field"><label for="floorDbm">Floor</label>
+              <select id="floorDbm" name="floorDbm" style="width:100%"><option value="-60">−60 dBFS</option><option value="-80">−80 dBFS</option><option value="-100">−100 dBFS</option><option value="-120">−120 dBFS</option></select></div>
+          </div>
+          <div class="field"><label for="paletteSel">Waterfall / constellation palette</label><select id="paletteSel" name="palette" style="width:100%"></select><span class="palette-swatch"></span></div>
+          <div class="field"><label for="avgCount">Page-side average depth</label><div class="row"><input type="number" id="avgCount" name="avgCount" value="8" min="2" max="64" step="1"><span class="suffix">frames</span></div></div>
+          <span class="label group">IQ snapshots</span>
+          <div class="stack">
+            <label class="row check"><input type="checkbox" name="autoSnapshot"> <span>Ask for a snapshot every second while an IQ session runs</span></label>
+          </div>
+          <div class="field" style="margin-top:8px"><label for="snapshotCount">Snapshot length</label>
+            <select id="snapshotCount" name="snapshotCount" style="width:100%"><option value="4096">4096 samples</option><option value="16384">16384 samples</option><option value="65536">65536 samples</option></select></div>
+          <span class="label group">Debugging</span>
+          <label class="row check"><input type="checkbox" name="rawFrames"> <span>Log every frame header in the console</span></label>
+        </form>
+      </div>
+    </section>
+
+    <section class="about-entry">
+      <h2><button type="button" id="aboutLink" aria-current="false" aria-expanded="false" title="What this page does, how the bridge fits, what is next">About</button></h2>
+    </section>
+  </aside>
+  <div class="sidebar-handle" id="sidebarHandle" title="Drag to resize the sidebar"></div>
+
+  <!-- ================================================================ main -->
+  <main class="main">
+    <section class="about" id="about" aria-label="About hackrf-web" hidden></section>
+    <div class="plot-area" id="plotArea">
+      <div class="chart-head">
+        <div class="views" role="group" aria-label="Windows">
+          <span class="suffix" style="align-self:center">Windows</span>
+          <button class="btn small" data-layout="1" aria-pressed="true">1</button>
+          <button class="btn small" data-layout="2" aria-pressed="false">2</button>
+          <button class="btn small" data-layout="4" aria-pressed="false">4</button>
+        </div>
+        <div class="tools" role="group" aria-label="Trace math">
+          <button class="btn small" id="maxBtn" aria-pressed="false" title="Keep the highest level seen at each bin (page-side)">Max hold</button>
+          <button class="btn small" id="minBtn" aria-pressed="false" title="Keep the lowest level seen at each bin (page-side)">Min hold</button>
+          <button class="btn small" id="avgBtn" aria-pressed="false" title="Power average over the last N frames (page-side)">Average</button>
+          <button class="btn small" id="holdBtn" aria-pressed="false" title="Keep the current trace on screen for comparison">Hold</button>
+          <button class="btn small" id="clearBtn" disabled>Clear</button>
+        </div>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div class="panes" id="panes"></div>
+    </div>
+
+    <section class="markers-panel" id="markersPanel" aria-label="Markers">
+      <div class="head">
+        <h2>Markers</h2>
+        <button class="btn small" id="peakBtn" disabled>Mark peak</button>
+        <button class="btn small" id="peaksBtn" disabled title="Highest local maxima, at least 10 dB above the frame median">Mark top 4 peaks</button>
+        <button class="btn small" id="tuneBtn" disabled title="Set the IQ-mode centre to marker 1 (restarts the session if one is running)">Tune IQ to marker 1</button>
+        <button class="btn small" id="clearMarkersBtn" disabled>Clear</button>
+        <span class="hint">Click a spectrum or waterfall window to place one (up to 6). Δ columns are relative to marker 1.</span>
+        <span class="hint" id="markerStatus" style="margin-left:auto"></span>
+      </div>
+      <div class="markers-wrap">
+        <table class="markers" id="markerTable">
+          <thead><tr><th>#</th><th>Frequency</th><th>Level dBFS</th><th>Max hold</th><th>−3 dB BW</th><th>Δ level dB</th><th>Δ freq</th><th></th></tr></thead>
+          <tbody id="markerBody"></tbody>
+        </table>
+        <p class="hint" id="markerEmpty">No markers yet.</p>
+        <p class="hint" id="bandPower"></p>
+      </div>
+    </section>
+
+    <section class="console" id="console" aria-label="Bridge console">
+      <div class="handle" id="conHandle" title="Drag to resize"></div>
+      <div class="bar">
+        <h2>Bridge console</h2>
+        <label>Log <select id="conDlMode"><option value="full">calls + replies</option><option value="cmd">calls only</option></select></label>
+        <button class="btn small" id="conDl" type="button">Download</button>
+        <button class="btn small" id="conCopy" type="button">Copy</button>
+        <button class="btn small" id="conClear" type="button">Clear</button>
+      </div>
+      <div class="log" id="log" aria-live="polite"></div>
+      <form class="log-send" id="sendForm">
+        <input id="sendInput" type="text" placeholder='Call a bridge method, e.g. session.status  or  record.status {}  (↑ ↓ for history)' autocomplete="off" disabled>
+        <button class="btn" type="submit" disabled>Send</button>
+      </form>
+    </section>
+  </main>
+</div>
+
+<footer>
+  hackrf-web <span id="appVersion"></span> · Last updated <time id="updated" datetime="2026-10-17">2026-10-17</time> · Needs the local bridge for a real board; the demo works anywhere. <a href="https://github.com/LC-Linkous/hackrf-web/blob/main/LICENSE">GPL-2.0</a>.
+  Maintained by <a href="https://github.com/LC-Linkous">LC Linkous</a>. Companion to <a href="https://github.com/LC-Linkous/hackRF_python">hackRF_python</a>. Not affiliated with Great Scott Gadgets.
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

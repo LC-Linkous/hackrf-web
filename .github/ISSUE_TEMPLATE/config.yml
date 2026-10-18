@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Open the tool
+    url: https://lc-linkous.github.io/hackrf-web/
+    about: The live page. Try the demo first to see whether the problem needs a device to reproduce.
+  - name: Bridge protocol
+    url: https://github.com/LC-Linkous/hackrf-web/blob/main/PROTOCOL.md
+    about: Calls, events, binary frames, the session state machine and the transmit gates.
+  - name: hackRF_python
+    url: https://github.com/LC-Linkous/hackRF_python
+    about: The library the bridge drives. If a call behaves differently in a script, say so in the issue.
+  - name: Which browsers allow an https page to reach loopback
+    url: https://developer.chrome.com/blog/private-network-access-update
+    about: Chrome and Firefox do; Safari does not. The bridge can serve the page itself instead (hackrf-web --local-page).

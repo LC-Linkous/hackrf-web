@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest a view, a readout, an export, or hardware support
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+      description: What were you trying to measure or do that the page doesn't support?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Sweep controls
+        - A new view (group delay, TDR, …)
+        - Markers / readouts
+        - Calibration
+        - Export / file formats
+        - Support for another HackRF model
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds
+      description: What you do today instead — HackRF_python, HackRF-Saver, the device's own menus, etc.

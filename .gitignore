@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+bridge/dist/
+bridge/build/
+bridge/*.egg-info
+bridge/src/hackrf_web/web/
+*.iq
+*.sigmf-meta

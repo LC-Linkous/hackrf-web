@@ -1,0 +1,48 @@
+name: bridge
+
+on:
+  push:
+    paths: ['bridge/**', 'web/**', '.github/workflows/bridge.yml']
+  pull_request:
+  release:
+    types: [published]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install numpy websockets build
+      - name: Bridge smoke test against the fake device
+        shell: bash
+        run: |
+          cd bridge
+          PYTHONPATH=src python -m hackrf_web.cli --fake --no-open --token ci --port 8790 --record-dir ../_rec &
+          sleep 3
+          PYTHONPATH=src python ../tests/smoke.py
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: pip install build
+      - run: python tools-sync-page.py && cd bridge && python -m build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: hackrf-web-wheel
+          path: bridge/dist/*
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v3
+        with:
+          files: bridge/dist/*
