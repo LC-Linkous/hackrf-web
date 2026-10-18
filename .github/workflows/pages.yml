@@ -22,11 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Stage site (web/ only)
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Stage site (web/ plus the rendered docs)
         run: |
           mkdir -p _site
           cp -r web/. _site/
-          cp PROTOCOL.md _site/
+          pip install -q markdown
+          python tools-render-docs.py _site
       - name: Stamp last-updated date from the commit
         run: |
           D=$(git log -1 --format=%cs)

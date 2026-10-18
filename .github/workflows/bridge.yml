@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install build
-      - run: python tools-sync-page.py && cd bridge && python -m build
+      - run: pip install markdown && python tools-sync-page.py && cd bridge && python -m build
       - uses: actions/upload-artifact@v7
         with:
           name: hackrf-web-wheel

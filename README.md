@@ -6,7 +6,9 @@ across any span to 6 GHz, IQ at one centre frequency with the FFT done locally,
 IQ snapshots as time-domain and constellation views, IQ recording to SigMF, and
 a transmit section that stays locked unless you unlock it on the bridge.
 
-**Use it:** https://lc-linkous.github.io/hackrf-web/
+**Use it:** https://lc-linkous.github.io/hackrf-web/ — this README, rendered, lives at
+[/readme/](https://lc-linkous.github.io/hackrf-web/readme/) and the protocol at
+[/protocol/](https://lc-linkous.github.io/hackrf-web/protocol/) on the same site.
 
 ```sh
 pip install hackrf-web
@@ -220,7 +222,12 @@ cd bridge && PYTHONPATH=src python -m hackrf_web.cli --fake --port 8765
 
 ## Releasing
 
-- Page: push to `main`; the `pages` workflow deploys `web/`.
+- Page: push to `main`; the `pages` workflow deploys `web/` to the site root
+  and renders README, PROTOCOL, CHANGELOG and CONTRIBUTING under `/readme/`,
+  `/protocol/`, `/changelog/`, `/contributing/` (`tools-render-docs.py`).
+  Pages must be set to **Source: GitHub Actions** — with the default branch
+  deploy, GitHub renders only README.md through Jekyll and the app never
+  appears.
 - Bridge: `python tools-sync-page.py && cd bridge && python -m build`, then
   `twine upload dist/*`. The `bridge` workflow runs the smoke test on Linux
   and Windows, builds the wheel on every push, and attaches it to a GitHub

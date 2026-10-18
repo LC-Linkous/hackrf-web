@@ -46,7 +46,7 @@ function render(root, { version }) {
           li('The page calls the bridge; the bridge calls ', code('hackrfpy'), '; ', code('hackrfpy'), ' runs the ', code('hackrf-tools'), ' binaries. The page never sees an argv or a raw stream it did not ask for.'),
           li('Spectrum frames come back at up to 12 per second. In IQ mode the bridge decodes, windows and FFTs the samples; 40 MB/s of int8 never crosses the socket.'),
           li('Recordings are written by the bridge next to its working directory, as interleaved int8 with a SigMF sidecar, with a mandatory time cap and a disk check first.')),
-        h('p.hint', {}, 'The contract between the two is ', h('a', { href: 'https://github.com/LC-Linkous/hackrf-web/blob/main/PROTOCOL.md' }, 'PROTOCOL.md'), '. ', code('hackrf-web --fake'), ' runs the bridge against a simulated board; ', h('i', {}, 'Try without hardware'), ' on this page replays recorded frames with no bridge at all.'))),
+        h('p.hint', {}, 'The contract between the two is ', h('a', { href: 'protocol/' }, 'PROTOCOL.md'), '. ', code('hackrf-web --fake'), ' runs the bridge against a simulated board; ', h('i', {}, 'Try without hardware'), ' on this page replays recorded frames with no bridge at all.'))),
     h('div.cols', {},
       h('div.card', {}, h('h3', {}, 'Envelope ', badge(LIMITS.name)),
         h('dl.kv', {},
@@ -73,6 +73,6 @@ function render(root, { version }) {
           li('Transmit from a file, with the same gates.'))),
       h('div.card', {}, h('h3', {}, 'Help validate it'),
         h('p', {}, 'Run ', code('hackrf-web --doctor'), ' first; it prints hackrfpy\'s preflight report. Then connect, start a sweep of the FM band, and compare with what you expect. If something is off, ', h('i', {}, 'Diagnostics → Download report'), ' bundles the preflight, the session status and the last frame headers into one JSON to attach to an issue.'),
-        h('p.hint', {}, 'See ', h('a', { href: 'https://github.com/LC-Linkous/hackrf-web/blob/main/CONTRIBUTING.md' }, 'CONTRIBUTING.md'), ' and the short ', h('a', { href: 'https://github.com/LC-Linkous/hackrf-web/blob/main/CODE_OF_CONDUCT.md' }, 'code of conduct'), '.'))),
-    h('p.hint', {}, 'hackrf-web ', h('span.mono', {}, 'v' + version), ' · GPL-2.0 · ', h('a', { href: 'https://github.com/LC-Linkous/hackrf-web/blob/main/PROTOCOL.md' }, 'bridge protocol'), ' · ', h('a', { href: 'https://github.com/LC-Linkous/hackrf-web/blob/main/CHANGELOG.md' }, 'changelog'), ' · ', h('a', { href: 'https://github.com/LC-Linkous/hackrf-web' }, 'source'), ' · ', h('a', { href: 'https://github.com/LC-Linkous/hackRF_python' }, 'hackRF_python'), '. Not affiliated with Great Scott Gadgets or the HackRF project.'));
+        h('p.hint', {}, 'See ', h('a', { href: 'contributing/' }, 'CONTRIBUTING.md'), ' and the short ', h('a', { href: 'https://github.com/LC-Linkous/hackrf-web/blob/main/CODE_OF_CONDUCT.md' }, 'code of conduct'), '.'))),
+    h('p.hint', {}, 'hackrf-web ', h('span.mono', {}, 'v' + version), ' · GPL-2.0 · ', h('a', { href: 'readme/' }, 'README'), ' · ', h('a', { href: 'protocol/' }, 'bridge protocol'), ' · ', h('a', { href: 'changelog/' }, 'changelog'), ' · ', h('a', { href: 'https://github.com/LC-Linkous/hackrf-web' }, 'source'), ' · ', h('a', { href: 'https://github.com/LC-Linkous/hackRF_python' }, 'hackRF_python'), '. Not affiliated with Great Scott Gadgets or the HackRF project.'));
 }

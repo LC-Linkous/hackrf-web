@@ -1,0 +1,20 @@
+/* doc.css — rendered Markdown pages (README, protocol, changelog) in the app's theme. */
+/* SPDX-License-Identifier: GPL-2.0-only */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.55; }
+a { color: var(--accent); }
+.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 10px 16px; border-bottom: 1px solid var(--edge); background: var(--panel); }
+.topbar h1 { font-size: 1.1rem; margin: 0 10px 0 0; } .topbar h1 a { color: var(--ink); text-decoration: none; }
+.topbar nav { margin-left: auto; } .topbar nav a { margin-left: 14px; font-size: .9rem; color: var(--ink-2); } .topbar nav a[aria-current="page"] { color: var(--accent); }
+.doc { max-width: 880px; margin: 0 auto; padding: 24px 16px 48px; }
+.doc h1 { font-size: 1.7rem; margin: 0 0 .4em; } .doc h2 { font-size: 1.25rem; margin: 1.8em 0 .5em; border-bottom: 1px solid var(--edge); padding-bottom: .25em; } .doc h3 { font-size: 1.05rem; margin: 1.4em 0 .4em; }
+.doc p, .doc li { color: var(--ink); } .doc li { margin: .25em 0; }
+.doc code { font-family: var(--mono); font-size: .9em; background: var(--screen); border: 1px solid var(--edge); padding: 0 4px; border-radius: 3px; }
+.doc pre { background: var(--screen); border: 1px solid var(--edge); border-radius: var(--radius); padding: 12px 14px; overflow-x: auto; font-family: var(--mono); font-size: .84rem; line-height: 1.4; }
+.doc pre code { background: none; border: none; padding: 0; }
+.doc table { border-collapse: collapse; width: 100%; font-size: .92rem; margin: .6em 0 1em; }
+.doc th, .doc td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--edge); vertical-align: top; } .doc th { color: var(--ink-2); font-weight: 600; }
+.doc img { max-width: 100%; border: 1px solid var(--edge); border-radius: var(--radius); }
+.doc blockquote { margin: 0; padding: 0 14px; border-left: 3px solid var(--edge); color: var(--ink-2); }
+footer { padding: 12px 16px; border-top: 1px solid var(--edge); color: var(--ink-3); font-size: .85rem; } footer a { color: var(--ink-2); }
